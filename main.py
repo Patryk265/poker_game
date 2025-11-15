@@ -181,8 +181,10 @@ def analyze_combinations(values: list[str]) -> list[str]:
     return results
 
 
-def main():
+
+def main() -> None:
     """Main function to generate a deck, deal cards, and analyze the hand."""
+
     deck = generate_deck()
     table = deal_cards(deck)
 

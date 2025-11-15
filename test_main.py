@@ -25,7 +25,7 @@ from collections import Counter
     (["Diamonds"] * 5, ["K", "A", "Q", "10", "J"], True),
 ])
 
-def test_is_royal_flush(colors, values, expected):
+def test_is_royal_flush(colors, values, expected) -> None:
     assert main.is_royal_flush(colors, values) == expected
 
 
@@ -38,7 +38,7 @@ def test_is_royal_flush(colors, values, expected):
     (["1"], False)
 
 ])
-def test_is_straight(values, expected):
+def test_is_straight(values, expected) -> None:
     assert main.is_straight(values) == expected
 
 
@@ -49,7 +49,7 @@ def test_is_straight(values, expected):
     (["Diamonds", "Hearts", "Hearts", "Diamonds", "Hearts"], False),
 
 ])
-def test_check_flush(colors, expected):
+def test_check_flush(colors, expected) -> None:
     assert main.check_flush(colors) == expected
 
 
@@ -61,7 +61,7 @@ def test_check_flush(colors, expected):
 
 ])
 
-def test_find_pairs(values, expected):
+def test_find_pairs(values, expected) -> None:
     counts = Counter(values)
     pairs = main.find_pairs(counts)
     assert sorted(pairs) == sorted(expected)
@@ -72,7 +72,7 @@ def test_find_pairs(values, expected):
     (["9", "9", "9", "3", "3"], "9"),
     (["A", "K", "Q", "J", "10"], None),
 ])
-def test_find_three_of_a_kind(values, expected):
+def test_find_three_of_a_kind(values, expected) -> None:
     counts = Counter(values)
     assert main.find_three_of_a_kind(counts) == expected
 
@@ -81,7 +81,7 @@ def test_find_three_of_a_kind(values, expected):
     (["A", "A", "A", "A", "K"], "A"),
     (["9", "9", "9", "3", "3"], None),
 ])
-def test_find_four_of_a_kind(values, expected):
+def test_find_four_of_a_kind(values, expected) -> None:
     counts = Counter(values)
     assert main.find_four_of_a_kind(counts) == expected
 
@@ -91,7 +91,7 @@ def test_find_four_of_a_kind(values, expected):
     (["A", "A", "A", "A", "K"], False),
     (["A", "A", "K", "K", "Q"], False),
 ])
-def test_has_full_house(values, expected):
+def test_has_full_house(values, expected) -> None:
     counts = Counter(values)
     assert main.has_full_house(counts) == expected
 
