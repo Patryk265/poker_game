@@ -1,3 +1,4 @@
+"""poker game."""
 import random
 from collections import Counter
 
@@ -28,7 +29,8 @@ def deal_cards(deck: list[tuple[str, str]], n: int = 5) -> list[tuple[str, str]]
     return random.sample(deck, n)
 
 
-def extract_colors_and_values(cards: list[tuple[str, str]]) -> tuple[list[str], list[str]]:
+def extract_colors_and_values(cards: list[tuple[str, str]]) ->\
+        tuple[list[str], list[str]]:
     """Separate suits and values from a list of cards.
 
     Args:
@@ -174,7 +176,8 @@ def analyze_combinations(values: list[str]) -> list[str]:
         results.append(f"One pair of '{pair}'")
 
     if has_full_house(counts):
-        results.append(f"Full House: three of '{three_card}' and pair of '{', '.join(pairs)}'")
+        results.append(
+            f"Full House: three of '{three_card}' and pair of '{', '.join(pairs)}'")
     elif len(pairs) == 2:
         results.append(f"Two pairs: '{pairs[0]}' and '{pairs[1]}'")
 
@@ -184,7 +187,6 @@ def analyze_combinations(values: list[str]) -> list[str]:
 
 def main() -> None:
     """Main function to generate a deck, deal cards, and analyze the hand."""
-
     deck = generate_deck()
     table = deal_cards(deck)
 
