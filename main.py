@@ -1,4 +1,4 @@
-"""poker game.co"""
+"""poker game."""
 import random
 from collections import Counter
 
