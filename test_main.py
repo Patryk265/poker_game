@@ -1,21 +1,5 @@
 import pytest
 import main
-from collections import Counter
-
-
-# def test_is_royal_flush():
-#     colors = ["Hearts","Hearts","Hearts","Hearts","Hearts"]
-#     value = ["10", "J", "Q", "K", "A"]
-#     assert is_royal_flush(colors, value) is True
-#
-#     colors = ["Diamonds", "Hearts", "Hearts", "Hearts", "Hearts"]
-#     value = ["10", "J", "Q", "K", "A"]
-#     assert is_royal_flush(colors, value) is False
-#
-#     colors = ["Diamonds", "Hearts", "Hearts", "Hearts", "Hearts"]
-#     value = ["2", "J", "Q", "K", "A"]
-#     assert is_royal_flush(colors, value) is False
-#
 
 
 @pytest.mark.parametrize("colors,values,expected", [
@@ -62,28 +46,24 @@ def test_check_flush(colors, expected) -> None:
 ])
 
 def test_find_pairs(values, expected) -> None:
-    counts = Counter(values)
-    pairs = main.find_pairs(counts)
-    assert sorted(pairs) == sorted(expected)
+    assert sorted(main.find_pairs(values)) == sorted(expected)
 
 
 @pytest.mark.parametrize("values,expected", [
-    (["A", "A", "A", "Q", "K"], "A"),
-    (["9", "9", "9", "3", "3"], "9"),
-    (["A", "K", "Q", "J", "10"], None),
+    (["A", "A", "A", "Q", "K"], True),
+    (["9", "9", "9", "3", "3"], True),
+    (["A", "K", "Q", "J", "10"], False),
 ])
 def test_find_three_of_a_kind(values, expected) -> None:
-    counts = Counter(values)
-    assert main.find_three_of_a_kind(counts) == expected
+    assert bool(main.find_three_of_a_kind(values)) == expected
 
 
 @pytest.mark.parametrize("values,expected", [
-    (["A", "A", "A", "A", "K"], "A"),
-    (["9", "9", "9", "3", "3"], None),
+    (["A", "A", "A", "A", "K"], True),
+    (["9", "9", "9", "3", "3"], False),
 ])
 def test_find_four_of_a_kind(values, expected) -> None:
-    counts = Counter(values)
-    assert main.find_four_of_a_kind(counts) == expected
+    assert bool(main.find_four_of_a_kind(values)) == expected
 
 
 @pytest.mark.parametrize("values,expected", [
@@ -92,6 +72,11 @@ def test_find_four_of_a_kind(values, expected) -> None:
     (["A", "A", "K", "K", "Q"], False),
 ])
 def test_has_full_house(values, expected) -> None:
-    counts = Counter(values)
-    assert main.has_full_house(counts) == expected
+    assert bool(main.has_full_house(values)) == expected
 
+@pytest.mark.parametrize("values, expected", [
+    (["2", "5", "J", "9", "A"], "A"),
+    (["2", "3", "4", "5", "6"], "6"),
+])
+def test_high_card(values, expected):
+    assert main.high_card(values) == expected
