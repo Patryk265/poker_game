@@ -114,17 +114,17 @@ def count_card_values(values: list[str]) -> Counter:
     return Counter(values)
 
 
-def find_pairs(values: list[str]) -> list[str]:
-    """Find all card values that appear exactly twice (pairs).
+# def find_pairs(values: list[str]) -> list[str]:
+#     """Find all card values that appear exactly twice (pairs).
 
-    Args:
-        counts (Counter): Counter of card values.
+#     Args:
+#         counts (Counter): Counter of card values.
 
-    Returns:
-        list[str]: list of card values forming pairs.
-    """
-    counts_values = count_card_values(values)
-    return [card for card, count in counts_values.items() if count == 2]
+#     Returns:
+#         list[str]: list of card values forming pairs.
+#     """
+#     counts_values = count_card_values(values)
+#     return [card for card, count in counts_values.items() if count == 2]
 
 
 def find_three_of_a_kind(values: list[str]) -> str | None:
@@ -173,39 +173,6 @@ def high_card(values: list[str]) -> str:
     return highest
 
 
-def analyze_combinations(values: list[str]) -> list[str]:
-    """Analyze card combinations like pairs, three of a kind, four of a kind, etc.
-
-    Args:
-        values (list[str]): list of card values.
-
-    Returns:
-        list[str]: Descriptions of combinations found in the hand.
-    """
-    counts = count_card_values(values)
-    results = []
-
-    four_card = find_four_of_a_kind(counts)
-    if four_card:
-        results.append(f"Quad of a kind '{four_card}'")
-
-    three_card = find_three_of_a_kind(counts)
-    if three_card:
-        results.append(f"Three of a kind '{three_card}'")
-
-    pairs = find_pairs(counts)
-    for pair in pairs:
-        results.append(f"One pair of '{pair}'")
-
-    if has_full_house(counts):
-        results.append(
-            f"Full House: three of '{three_card}' and pair of '{', '.join(pairs)}'")
-    elif len(pairs) == 2:
-        results.append(f"Two pairs: '{pairs[0]}' and '{pairs[1]}'")
-
-    return results
-
-
 def evaluate_hand(user_cards):
     """Evaluate the hand for each user's cards.
     Args:
@@ -238,18 +205,63 @@ def evaluate_hand(user_cards):
     elif find_three_of_a_kind(values):
         return 4
 
-    pairs = find_pairs(values)
+    card_values = count_card_values(values)
+    value = list(card_values.values())
+    keys = list(card_values.keys())
+
+
+
     # two pairs
-    if len(pairs) == 2:
-        return 3
+    if len(value) == 3:
+
+        return (3, keys[0], keys[1], keys[2])
     # one pair
 
-    elif len(pairs) == 1:
-        return 2
+    elif len(value) == 4:
+        card_value = [k for k,v in card_values.items() if card_values[k] == 2][0]
+        max_card = high_card(keys[1:])
+        return (2, card_value, max_card)
 
     elif high_card(values):
-        return 1
+        return (1,  high_card(values))
 
+
+def change_cards(cards: list[tuple[str, str]],
+                 deck: list[tuple[str, str]],
+                 indices: list[int] | None = None) -> None:
+    """
+    Replace selected cards (by index) with new ones from the deck.
+    Modifies cards in-place.
+    """
+    if not indices:
+        return
+
+    for idx in indices:
+        if idx < 0 or idx >= len(cards):
+            raise IndexError(f"Invalid card index: {idx}")
+
+        # get new card
+        new_card = deck.pop(0)
+
+        # replace card
+        cards[idx] = new_card
+
+def high_card_tie_break(player0, player1):
+    high_card_value = high_card([player0['result'][1], player1['result'][1]])
+
+    if player0['result'][1] == player1['result'][1]:
+        print("draw")
+    elif high_card_value == player1['result'][1]:
+        print("player1 won")
+    else:
+        print("player0 won")
+
+
+# def one_pair_tie_break
+#
+# def tie_break(player0, player1):
+#     match case
+#
 
 
 
@@ -260,23 +272,50 @@ def main() -> None:
     users_cards = deal_cards(deck)
 
     # print(f"{users_cards}")
-
+    print(users_cards)
     game_result = []
+
+
     for player, cards in users_cards.items():
+        #print(f"{player} before change: {cards}")
+
+        # exchange card on index 1 and 3
+        # indices_to_change = [1, 3]
+
+        # indices_to_change = input("pass in card indexes form 0-4 to replace card or press enter to ommit: "
+        # ).strip()
+
+        # indices = list(map(int, indices_to_change.split())) if indices_to_change else None
+
+        # change_cards(cards, deck, indices)
+
+        # print(f"{player} after change: {cards}")
+
         # print(cards)
-        # cards = [('Spades', '3'), ('Hearts', '5'), ('Clubs', '4'), ('Hearts', '2'), ('Spades', '7')]
+        cards = [('Spades', '3'), ('Hearts', '5'), ('Clubs', '2'), ('Hearts', '9'), ('Spades', '7')]
         result = evaluate_hand(cards)
+        print(result)
         player_dict = {'player_name':player, 'hand':cards, 'result': result}
         game_result.append(player_dict)
 
-        # print(f"{player} has {cards} with {result}")
-    print(game_result)
 
+        print(f"{player} has {cards} with {result}")
+    print(game_result)
+    # for idx, player_result in enumerate(game_result):
+    if game_result[0]['result'][0] > game_result[1]['result'][0]:
+        print("player with index 0 won")
+    elif game_result[0]['result'][0] < game_result[1]['result'][0]:
+        print("player with index 1 won")
+    elif game_result[0]['result'][0] == game_result[1]['result'][0]:
+        match game_result[0]['result'][0]:
+            case 1:
+                high_card_tie_break(game_result[0], game_result[1])
+
+
+
+
+    # else:
+    #     print
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
