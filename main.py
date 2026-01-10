@@ -16,7 +16,7 @@ def generate_deck() -> list[tuple[str, str]]:
     return [(color, value) for color in colors for value in values]
 
 
-def deal_cards(deck: list[tuple[str, str]], n: int = 5) -> list[tuple[str, str]]:
+def deal_cards(deck: list[tuple[str, str]], n: int = 5, amount_of_users: int = 2) -> list[tuple[str, str]]:
     """Draw a number of random cards from the deck without repetition.
 
     Args:
@@ -26,7 +26,19 @@ def deal_cards(deck: list[tuple[str, str]], n: int = 5) -> list[tuple[str, str]]
     Returns:
         list[tuple[str, str]]: A list of drawn card tuples.
     """
-    return random.sample(deck, n)
+    random.shuffle(deck)
+
+
+
+    # karty dla graczy
+    users_cards = {}
+    for i in range(amount_of_users):
+        player_cards = deck[:5]
+        del deck[:5]
+        users_cards[f"player{i}"] = player_cards
+
+    return users_cards
+
 
 
 def extract_colors_and_values(cards: list[tuple[str, str]]) ->\
@@ -56,6 +68,7 @@ def is_royal_flush(colors: list[str], values: list[str]) -> bool:
     """
     royal_flush = {"10", "J", "Q", "K", "A"}
     return len(set(colors)) == 1 and set(values) == royal_flush
+
 
 
 def is_straight(values: list[str]) -> bool:
@@ -101,19 +114,20 @@ def count_card_values(values: list[str]) -> Counter:
     return Counter(values)
 
 
-def find_pairs(counts: Counter) -> list[str]:
-    """Find all card values that appear exactly twice (pairs).
+# def find_pairs(values: list[str]) -> list[str]:
+#     """Find all card values that appear exactly twice (pairs).
 
-    Args:
-        counts (Counter): Counter of card values.
+#     Args:
+#         counts (Counter): Counter of card values.
 
-    Returns:
-        list[str]: list of card values forming pairs.
-    """
-    return [card for card, count in counts.items() if count == 2]
+#     Returns:
+#         list[str]: list of card values forming pairs.
+#     """
+#     counts_values = count_card_values(values)
+#     return [card for card, count in counts_values.items() if count == 2]
 
 
-def find_three_of_a_kind(counts: Counter) -> str | None:
+def find_three_of_a_kind(values: list[str]) -> str | None:
     """Find the card value that appears three times (three of a kind).
 
     Args:
@@ -122,10 +136,11 @@ def find_three_of_a_kind(counts: Counter) -> str | None:
     Returns:
         str | None: The card value that forms three of a kind, or None if not found.
     """
-    return next((card for card, count in counts.items() if count == 3), None)
+    counts_values = count_card_values(values)
+    return any(card for card, count in counts_values.items() if count == 3)
 
 
-def find_four_of_a_kind(counts: Counter) -> str | None:
+def find_four_of_a_kind(values: list[str]) -> str | None:
     """Find the card value that appears four times (four of a kind).
 
     Args:
@@ -134,10 +149,11 @@ def find_four_of_a_kind(counts: Counter) -> str | None:
     Returns:
         str | None: The card value that forms four of a kind, or None if not found.
     """
-    return next((card for card, count in counts.items() if count == 4), None)
+    counts_values = count_card_values(values)
+    return any(card for card, count in counts_values.items() if count == 4)
 
 
-def has_full_house(counts: Counter) -> bool:
+def has_full_house(values: list[str]) -> bool:
     """Check if the hand is a full house (three of a kind + one pair).
 
     Args:
@@ -146,69 +162,160 @@ def has_full_house(counts: Counter) -> bool:
     Returns:
         bool: True if the hand is a full house, False otherwise.
     """
-    has_three = any(count == 3 for count in counts.values())
-    has_pair = any(count == 2 for count in counts.values())
+    counts_values = count_card_values(values)
+    has_three = any(count == 3 for count in counts_values.values())
+    has_pair = any(count == 2 for count in counts_values.values())
     return has_three and has_pair
 
+def high_card(values: list[str]) -> str:
+    order = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
+    highest = max(values, key=lambda c:order.index(c))
+    return highest
 
-def analyze_combinations(values: list[str]) -> list[str]:
-    """Analyze card combinations like pairs, three of a kind, four of a kind, etc.
 
+def evaluate_hand(user_cards):
+    """Evaluate the hand for each user's cards.
     Args:
-        values (list[str]): list of card values.
-
-    Returns:
-        list[str]: Descriptions of combinations found in the hand.
     """
-    counts = count_card_values(values)
-    results = []
+    colors, values = extract_colors_and_values(user_cards)
 
-    four_card = find_four_of_a_kind(counts)
-    if four_card:
-        results.append(f"Quad of a kind '{four_card}'")
 
-    three_card = find_three_of_a_kind(counts)
-    if three_card:
-        results.append(f"Three of a kind '{three_card}'")
+    print("\n--- ANALYSIS ---")
+    if is_royal_flush(colors, values):
+        print("Royal Flush!")
+        return 10
+    elif is_straight(values) and check_flush(colors):
+        print("Straight Flush!")
+        return 9
 
-    pairs = find_pairs(counts)
-    for pair in pairs:
-        results.append(f"One pair of '{pair}'")
+    elif find_four_of_a_kind(values):
+        return 8
 
-    if has_full_house(counts):
-        results.append(
-            f"Full House: three of '{three_card}' and pair of '{', '.join(pairs)}'")
-    elif len(pairs) == 2:
-        results.append(f"Two pairs: '{pairs[0]}' and '{pairs[1]}'")
+    elif has_full_house(values):
+        return 7
 
-    return results
+    elif check_flush(colors):
+        print("Flush!")
+        return 6
+
+    elif is_straight(values):
+        print("Straight!")
+        return 5
+
+    elif find_three_of_a_kind(values):
+        return 4
+
+    card_values = count_card_values(values)
+    value = list(card_values.values())
+    keys = list(card_values.keys())
+
+
+
+    # two pairs
+    if len(value) == 3:
+
+        return (3, keys[0], keys[1], keys[2])
+    # one pair
+
+    elif len(value) == 4:
+        card_value = [k for k,v in card_values.items() if card_values[k] == 2][0]
+        max_card = high_card(keys[1:])
+        return (2, card_value, max_card)
+
+    elif high_card(values):
+        return (1,  high_card(values))
+
+
+def change_cards(cards: list[tuple[str, str]],
+                 deck: list[tuple[str, str]],
+                 indices: list[int] | None = None) -> None:
+    """
+    Replace selected cards (by index) with new ones from the deck.
+    Modifies cards in-place.
+    """
+    if not indices:
+        return
+
+    for idx in indices:
+        if idx < 0 or idx >= len(cards):
+            raise IndexError(f"Invalid card index: {idx}")
+
+        # get new card
+        new_card = deck.pop(0)
+
+        # replace card
+        cards[idx] = new_card
+
+def high_card_tie_break(player0, player1):
+    high_card_value = high_card([player0['result'][1], player1['result'][1]])
+
+    if player0['result'][1] == player1['result'][1]:
+        print("draw")
+    elif high_card_value == player1['result'][1]:
+        print("player1 won")
+    else:
+        print("player0 won")
+
+
+# def one_pair_tie_break
+#
+# def tie_break(player0, player1):
+#     match case
+#
+
 
 
 
 def main() -> None:
     """Main function to generate a deck, deal cards, and analyze the hand."""
     deck = generate_deck()
-    table = deal_cards(deck)
+    users_cards = deal_cards(deck)
 
-    print("Cards on table:")
-    for color, value in table:
-        print(f"  {value} of {color}")
+    # print(f"{users_cards}")
+    print(users_cards)
+    game_result = []
 
-    colors, values = extract_colors_and_values(table)
 
-    print("\n--- ANALYSIS ---")
-    if is_royal_flush(colors, values):
-        print("Royal Flush!")
-    elif is_straight(values) and check_flush(colors):
-        print("Straight Flush!")
-    elif check_flush(colors):
-        print("Flush!")
-    elif is_straight(values):
-        print("Straight!")
+    for player, cards in users_cards.items():
+        #print(f"{player} before change: {cards}")
 
-    for result in analyze_combinations(values):
+        # exchange card on index 1 and 3
+        # indices_to_change = [1, 3]
+
+        # indices_to_change = input("pass in card indexes form 0-4 to replace card or press enter to ommit: "
+        # ).strip()
+
+        # indices = list(map(int, indices_to_change.split())) if indices_to_change else None
+
+        # change_cards(cards, deck, indices)
+
+        # print(f"{player} after change: {cards}")
+
+        # print(cards)
+        cards = [('Spades', '3'), ('Hearts', '5'), ('Clubs', '2'), ('Hearts', '9'), ('Spades', '7')]
+        result = evaluate_hand(cards)
         print(result)
+        player_dict = {'player_name':player, 'hand':cards, 'result': result}
+        game_result.append(player_dict)
 
+
+        print(f"{player} has {cards} with {result}")
+    print(game_result)
+    # for idx, player_result in enumerate(game_result):
+    if game_result[0]['result'][0] > game_result[1]['result'][0]:
+        print("player with index 0 won")
+    elif game_result[0]['result'][0] < game_result[1]['result'][0]:
+        print("player with index 1 won")
+    elif game_result[0]['result'][0] == game_result[1]['result'][0]:
+        match game_result[0]['result'][0]:
+            case 1:
+                high_card_tie_break(game_result[0], game_result[1])
+
+
+
+
+    # else:
+    #     print
 
 if __name__ == "__main__":
     main()
