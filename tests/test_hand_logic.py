@@ -1,5 +1,8 @@
 import pytest
-import main
+# from hand_logic.tests import is_royal_flush, is_straight, check_flush
+# czemu powyższe nie działa ?
+from poker import hand_logic
+
 
 
 @pytest.mark.parametrize("colors,values,expected", [
@@ -10,7 +13,7 @@ import main
 ])
 
 def test_is_royal_flush(colors, values, expected) -> None:
-    assert main.is_royal_flush(colors, values) == expected
+    assert hand_logic.is_royal_flush(colors, values) == expected
 
 
 
@@ -23,7 +26,7 @@ def test_is_royal_flush(colors, values, expected) -> None:
 
 ])
 def test_is_straight(values, expected) -> None:
-    assert main.is_straight(values) == expected
+    assert hand_logic.is_straight(values) == expected
 
 
 @pytest.mark.parametrize("colors, expected", [
@@ -34,20 +37,18 @@ def test_is_straight(values, expected) -> None:
 
 ])
 def test_check_flush(colors, expected) -> None:
-    assert main.check_flush(colors) == expected
+    assert hand_logic.check_flush(colors) == expected
 
 
-@pytest.mark.parametrize("values, expected", [
-    (["10", "10", "Q", "A", "K"], ["10"]),
-    (["Q", "Q", "3", "5", "6"], ["Q"]),
-    (["7", "8", "3", "Q", "K"], []),
-    (["2", "3", "Q", "K", "10"], []),
-
-])
-
-def test_find_pairs(values, expected) -> None:
-    assert sorted(main.find_pairs(values)) == sorted(expected)
-
+# @pytest.mark.parametrize("values, expected", [
+#     (["10", "10", "Q", "A", "K"], ["10"]),
+#     (["Q", "Q", "3", "5", "6"], ["Q"]),
+#     (["7", "8", "3", "Q", "K"], []),
+#     (["2", "3", "Q", "K", "10"], []),
+#
+# ])
+# def test_find_pairs(values, expected) -> None:
+#     assert sorted(hand_logic.find_pairs(values)) == sorted(expected)
 
 @pytest.mark.parametrize("values,expected", [
     (["A", "A", "A", "Q", "K"], True),
@@ -55,7 +56,7 @@ def test_find_pairs(values, expected) -> None:
     (["A", "K", "Q", "J", "10"], False),
 ])
 def test_find_three_of_a_kind(values, expected) -> None:
-    assert bool(main.find_three_of_a_kind(values)) == expected
+    assert bool(hand_logic.find_three_of_a_kind(values)) == expected
 
 
 @pytest.mark.parametrize("values,expected", [
@@ -63,7 +64,7 @@ def test_find_three_of_a_kind(values, expected) -> None:
     (["9", "9", "9", "3", "3"], False),
 ])
 def test_find_four_of_a_kind(values, expected) -> None:
-    assert bool(main.find_four_of_a_kind(values)) == expected
+    assert bool(hand_logic.find_four_of_a_kind(values)) == expected
 
 
 @pytest.mark.parametrize("values,expected", [
@@ -72,11 +73,11 @@ def test_find_four_of_a_kind(values, expected) -> None:
     (["A", "A", "K", "K", "Q"], False),
 ])
 def test_has_full_house(values, expected) -> None:
-    assert bool(main.has_full_house(values)) == expected
+    assert bool(hand_logic.has_full_house(values)) == expected
 
 @pytest.mark.parametrize("values, expected", [
     (["2", "5", "J", "9", "A"], "A"),
     (["2", "3", "4", "5", "6"], "6"),
 ])
 def test_high_card(values, expected):
-    assert main.high_card(values) == expected
+    assert hand_logic.high_card(values) == expected
