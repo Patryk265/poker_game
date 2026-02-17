@@ -34,18 +34,18 @@ def test_high_card_tie_break(player0, player1, expected, capsys):
 @pytest.mark.parametrize(
     "player0_result, player1_result, expected",
     [
-        # ten sam pair → kicker
+        # identical pair → kicker
         ((2, "10", "A"), (2, "10", "9"), "player0 won"),
         ((2, "10", "9"), (2, "10", "A"), "player1 won"),
 
-        # remis
+        # draw
         ((2, "10", "K"), (2, "10", "K"), "draw"),
 
-        # różne pary
+        # different pairs
         ((2, "J", "2"), (2, "9", "A"), "player0 won"),
         ((2, "9", "A"), (2, "J", "2"), "player1 won"),
 
-        # niskie pary
+        # low pairs
         ((2, "2", "A"), (2, "3", "K"), "player1 won"),
     ],
 )
@@ -85,7 +85,7 @@ def test_two_pairs_tie_break(player0_result, player1_result, expected, capsys):
     assert captured.out.strip() == expected
 
 # =====================================================
-# THREE OF A KIND
+# THREE OF A KIND / FULL HOUSE
 # Format: (rank, pair, kicker)
 # =====================================================
 
@@ -103,12 +103,26 @@ def test_two_pairs_tie_break(player0_result, player1_result, expected, capsys):
 
         # draw
         ((4, "5", "8"), (4, "5", "8"), "draw"),
+
+        # FULL HOUSE
+        # different three of a kind
+        ((7, "K", "10"), (7, "Q", "A"), "player0 won"),
+        ((7, "9", "A"), (7, "J", "2"), "player1 won"),
+
+        # same three, different pair
+        ((7, "K", "Q"), (7, "K", "J"), "player0 won"),
+        ((7, "10", "2"), (7, "10", "A"), "player1 won"),
+
+        # draw
+        ((7, "K", "10"), (7, "K", "10"), "draw"),
     ],
 )
 def test_three_tie_break(player0_result, player1_result, expected, capsys):
     three_of_kind_tie_break(player0_result, player1_result)
     captured = capsys.readouterr()
     assert captured.out.strip() == expected
+
+
 
 
 # =====================================================
