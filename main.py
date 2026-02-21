@@ -1,7 +1,8 @@
 """poker game."""
 import random
-from poker.hand_logic import is_royal_flush, is_straight, check_flush, count_card_values, find_three_of_a_kind, find_four_of_a_kind, has_full_house, high_card
+from poker.hand_logic import is_royal_flush, is_straight, check_flush, find_three_of_a_kind, find_four_of_a_kind, has_full_house, high_card
 import poker.tie_break as tb
+from collections import Counter
 
 
 
@@ -29,13 +30,10 @@ def deal_cards(deck: list[tuple[str, str]], n: int = 5, amount_of_users: int = 2
     """
     random.shuffle(deck)
 
-
-
-    # karty dla graczy
     users_cards = {}
     for i in range(amount_of_users):
-        player_cards = deck[:5]
-        del deck[:5]
+        player_cards = deck[:n]
+        del deck[:n]
         users_cards[f"player{i}"] = player_cards
 
     return users_cards
@@ -57,6 +55,9 @@ def extract_colors_and_values(cards: list[tuple[str, str]]) ->\
     return colors, values
 
 
+def count_card_amount(n: int, card_values: dict) -> int:
+    return [k for k, v in card_values.items() if card_values[k] == n][0]
+
 
 def evaluate_hand(user_cards):
     """Evaluate the hand for each user's cards.
@@ -64,69 +65,63 @@ def evaluate_hand(user_cards):
     """
     colors, values = extract_colors_and_values(user_cards)
 
-    card_values = count_card_values(values)
+    card_values = Counter(values)
     value = list(card_values.values())
     keys = list(card_values.keys())
 
     print("\n--- ANALYSIS ---")
+    # Checks whether the hand is a Royal Flush (10, J, Q, K, A all in the same suit)
     if is_royal_flush(colors, values):
-        print("Royal Flush!")
         return 10
-    elif is_straight(values) and check_flush(colors):
-        print("Straight Flush!")
-        max_card = high_card(keys)
-        return (9, max_card)
 
+    # Checks whether the hand is a Straight Flush (five consecutive values in the same suit)
+    elif is_straight(values) and check_flush(colors):
+        return (9, high_card(keys))
+
+    # Checks whether the hand contains Four of a Kind (four cards of the same value)
     elif find_four_of_a_kind(values):
-        card_value = [k for k, v in card_values.items() if card_values[k] == 4][0]
+        card_value = count_card_amount(4, card_values)
         max_card = high_card(keys[1:])
         return (8, card_value, max_card)
 
+    # Checks whether the hand is a Full House (three of a kind plus a pair)
     elif has_full_house(values):
-        three = [k for k, v in card_values.items() if card_values[k] == 3][0]
-        pair = [k for k, v in card_values.items() if card_values[k] == 2][0]
+        three = count_card_amount(3, card_values)
+        pair = count_card_amount(2, card_values)
         return (7, three, pair)
 
+    # Checks whether the hand is a Flush (all cards of the same suit, not in sequence)
     elif check_flush(colors):
-        print("Flush!")
-        max_card = high_card(keys)
-        return (6, max_card)
+        return (6, high_card(keys))
 
+    # Checks whether the hand is a Straight (five consecutive values, suits ignored)
     elif is_straight(values):
-        print("Straight!")
-        max_card = high_card(keys)
-        return (5, max_card)
+        return (5, high_card(keys))
 
-
+    # Checks whether the hand contains Three of a Kind (three cards of the same value)
     elif find_three_of_a_kind(values):
-        card_value = [k for k, v in card_values.items() if card_values[k] == 3][0]
+        card_value = count_card_amount(3, card_values)
         max_card = high_card(keys[1:])
         return (4, card_value, max_card)
 
-
-
-    # two pairs
+    # Checks whether the hand contains Two Pairs (two different pairs plus one kicker)
     elif len(value) == 3:
-
         return (3, keys[0], keys[1], keys[2])
-    # one pair
 
+    # Checks whether the hand contains One Pair (one pair plus three kickers)
     elif len(value) == 4:
-        card_value = [k for k,v in card_values.items() if card_values[k] == 2][0]
+        card_value = count_card_amount(2, card_values)
         max_card = high_card(keys[1:])
         return (2, card_value, max_card)
 
+    # Checks for High Card when no other poker hand is present
     elif high_card(values):
-        return (1,  high_card(values))
+        return (1, high_card(values))
 
 
 def change_cards(cards: list[tuple[str, str]],
                  deck: list[tuple[str, str]],
                  indices: list[int] | None = None) -> None:
-    """
-    Replace selected cards (by index) with new ones from the deck.
-    Modifies cards in-place.
-    """
     if not indices:
         return
 
@@ -134,98 +129,54 @@ def change_cards(cards: list[tuple[str, str]],
         if idx < 0 or idx >= len(cards):
             raise IndexError(f"Invalid card index: {idx}")
 
-        # get new card
         new_card = deck.pop(0)
-
-        # replace card
         cards[idx] = new_card
 
+def evaluate_result(game_result):
+    player0_result = game_result[0]['result']
+    player1_result = game_result[1]['result']
 
-# def one_pair_tie_break
-#
-# def tie_break(player0, player1):
-#     match case
-#
+    if player0_result[0] > player1_result[0]:
+        print("player with index 0 won")
+    elif player0_result[0] < player1_result[0]:
+        print("player with index 1 won")
 
-
+    elif player0_result[0] == player1_result[0]:
+        match player0_result[0]:
+            case 1 | 5 | 6 | 9:
+                tb.high_card_tie_break(player0_result[1], player1_result[1])
+            case 2:
+                tb.pair_tie_break(player0_result, player1_result)
+            case 3:
+                tb.two_paris_tie_break(player0_result, player1_result)
+            case 4 | 7 | 8:
+                tb.gorouped_cards_tie_break(player0_result, player1_result)
 
 def main() -> None:
     """Main function to generate a deck, deal cards, and analyze the hand."""
     deck = generate_deck()
     users_cards = deal_cards(deck)
-    # users_cards = {'player0': [('Clubs', '8'), ('Hearts', '8'), ('Clubs', '8'), ('Spades', '8'), ('Hearts', 'A')],
-    #                'player1': [('Diamonds', '9'), ('Clubs', '9'), ('Spades', '9'), ('Spades', '9'), ('Hearts', 'A')]}
 
-    print(f"{users_cards}")
     print(users_cards)
     game_result = []
 
-
     for player, cards in users_cards.items():
-        #print(f"{player} before change: {cards}")
+        print(f"{player} before change: {cards}")
+        indices_to_change = input("pass in card indexes form 0-4 to replace card or press enter to ommit: "
+        ).strip()
+        indices = list(map(int, indices_to_change.split())) if indices_to_change else None
+        change_cards(cards, deck, indices)
+        print(f"{player} after change: {cards}")
 
-        # exchange card on index 1 and 3
-        # indices_to_change = [1, 3]
-
-        # indices_to_change = input("pass in card indexes form 0-4 to replace card or press enter to ommit: "
-        # ).strip()
-
-        # indices = list(map(int, indices_to_change.split())) if indices_to_change else None
-
-        # change_cards(cards, deck, indices)
-
-        # print(f"{player} after change: {cards}")
-
-        # print(cards)
-        # cards = [('Spades', '5'), ('Spades', '5'), ('Spades', '5'), ('Spades', '4'), ('Spades', '4')]
         result = evaluate_hand(cards)
-        print(result)
         player_dict = {'player_name':player, 'hand':cards, 'result': result}
         game_result.append(player_dict)
-
-
         print(f"{player} has {cards} with {result}")
+
     print(game_result)
-    # for idx, player_result in enumerate(game_result):
-    if game_result[0]['result'][0] > game_result[1]['result'][0]:
-        print("player with index 0 won")
-    elif game_result[0]['result'][0] < game_result[1]['result'][0]:
-        print("player with index 1 won")
 
-    elif game_result[0]['result'][0] == game_result[1]['result'][0]:
-        match game_result[0]['result'][0]:
-            case 1:
-                tb.high_card_tie_break(game_result[0]['result'][1], game_result[1]['result'][1])
+    evaluate_result(game_result)
 
-            case 2:
-                tb.pair_tie_break(game_result[0]['result'], game_result[1]['result'])
-
-            case 3:
-                tb.two_paris_tie_break(game_result[0]['result'], game_result[1]['result'])
-
-            case 4:
-                tb.three_of_kind_tie_break(game_result[0]['result'], game_result[1]['result'])
-            case 5:
-                # reused function
-                tb.high_card_tie_break(game_result[0]['result'], game_result[1]['result'])
-            case 6:
-                tb.high_card_tie_break(game_result[0]['result'], game_result[1]['result'])
-            case 7:
-                tb.three_of_kind_tie_break(game_result[0]['result'], game_result[1]['result'])
-            case 8:
-                tb.three_of_kind_tie_break(game_result[0]['result'], game_result[1]['result'])
-            case 9:
-                tb.high_card_tie_break(game_result[0]['result'], game_result[1]['result'])
-
-
-
-# TODO
-# napisać testy do tie_break
-
-#wysłać gotowy kod na git huba z gotowymi testami i dodać dominika jako rewiuera
-
-    # else:
-    #     print
 
 if __name__ == "__main__":
     main()

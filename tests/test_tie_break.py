@@ -3,7 +3,7 @@ from poker.tie_break import (
     high_card_tie_break,
     pair_tie_break,
     two_pairs_tie_break,
-    three_of_kind_tie_break,
+    grouped_cards_tie_break,
 )
 
 # =====================================================
@@ -118,7 +118,7 @@ def test_two_pairs_tie_break(player0_result, player1_result, expected, capsys):
     ],
 )
 def test_three_tie_break(player0_result, player1_result, expected, capsys):
-    three_of_kind_tie_break(player0_result, player1_result)
+    grouped_cards_tie_break(player0_result, player1_result)
     captured = capsys.readouterr()
     assert captured.out.strip() == expected
 
@@ -176,8 +176,8 @@ def test_high_card_based_tie_break(player0_result, player1_result, expected, cap
     ],
 )
 def test_full_house_tie_break(player0_result, player1_result, expected, capsys):
-    # full house używa logiki three_of_kind_tie_break
-    three_of_kind_tie_break(
+    # full house używa logiki grouped_cards_tie_break
+    grouped_cards_tie_break(
         (4, player0_result[1], player0_result[2]),
         (4, player1_result[1], player1_result[2]),
     )
@@ -206,7 +206,7 @@ def test_full_house_tie_break(player0_result, player1_result, expected, capsys):
     ],
 )
 def test_four_of_kind_tie_break(player0_result, player1_result, expected, capsys):
-    three_of_kind_tie_break(
+    grouped_cards_tie_break(
         (4, player0_result[1], player0_result[2]),
         (4, player1_result[1], player1_result[2]),
     )
