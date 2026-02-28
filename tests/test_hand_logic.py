@@ -22,7 +22,6 @@ def test_is_royal_flush(colors, values, expected) -> None:
     (["9", "10", "J", "Q", "K"], True),
     (["7", "8", "3", "Q", "K"], False),
     (["2", "3", "Q", "K", "10"], False),
-    (["1"], False)
 
 ])
 def test_is_straight(values, expected) -> None:

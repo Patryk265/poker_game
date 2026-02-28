@@ -1,12 +1,30 @@
 from collections import Counter
 
 
+CARD_ORDER = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
+VALUE_MAP = {v: i for i, v in enumerate(CARD_ORDER, start=2)}
+
+
+def to_numbers(values: list[str]) -> list[int]:
+    """Convert card values to numeric representations and sort them.
+
+    Args:
+        values (list[str]): List of card values (e.g. ["A", "K", "10"]).
+
+    Returns:
+        list[int]: Sorted list of numeric card values.
+    """
+    return sorted(VALUE_MAP[v] for v in values)
+
+
 def is_royal_flush(colors: list[str], values: list[str]) -> bool:
     """Check if the hand is a Royal Flush.
 
+    A Royal Flush consists of 10, J, Q, K, A all in the same suit.
+
     Args:
-        colors (list[str]): list of suits of the hand.
-        values (list[str]): list of values of the hand.
+        colors (list[str]): List of suits of the hand.
+        values (list[str]): List of card values of the hand.
 
     Returns:
         bool: True if the hand is a Royal Flush, False otherwise.
@@ -15,31 +33,24 @@ def is_royal_flush(colors: list[str], values: list[str]) -> bool:
     return len(set(colors)) == 1 and set(values) == royal_flush
 
 
-
 def is_straight(values: list[str]) -> bool:
     """Check if the hand is a straight (five consecutive values).
 
     Args:
-        values (list[str]): list of card values.
+        values (list[str]): List of card values.
 
     Returns:
         bool: True if the hand forms a straight, False otherwise.
     """
-    mapping = {'J': '11', 'Q': '12', 'K': '13', 'A': '14'}
-    numeric_values = [int(mapping.get(v, v)) for v in values]
-    numeric_values.sort()
-
-    if len(set(numeric_values)) != 5:
-        return False
-
-    return all(numeric_values[i] + 1 == numeric_values[i + 1] for i in range(4))
+    sorted_values = to_numbers(values)
+    return all(sorted_values[i] + 1 == sorted_values[i + 1] for i in range(4))
 
 
 def check_flush(colors: list[str]) -> bool:
     """Check if all cards are of the same suit.
 
     Args:
-        colors (list[str]): list of suits of the hand.
+        colors (list[str]): List of suits of the hand.
 
     Returns:
         bool: True if all cards have the same suit, False otherwise.
@@ -47,72 +58,69 @@ def check_flush(colors: list[str]) -> bool:
     return len(set(colors)) == 1
 
 
-def count_card_values(values: list[str]) -> Counter:
-    """Count occurrences of each card value in the hand.
+def _find_number_of_kind(values: list[str], quantity: int) -> bool:
+    """Check if the hand contains a specific number of identical card values.
 
     Args:
-        values (list[str]): list of card values.
+        values (list[str]): List of card values.
+        quantity (int): Number of identical cards to look for.
 
     Returns:
-        Counter: A Counter object mapping card values to their counts.
+        bool: True if such a group exists, False otherwise.
     """
-    return Counter(values)
+    counts = Counter(values)
+    return any(count == quantity for count in counts.values())
 
 
-# def find_pairs(values: list[str]) -> list[str]:
-#     """Find all card values that appear exactly twice (pairs).
-
-#     Args:
-#         counts (Counter): Counter of card values.
-
-#     Returns:
-#         list[str]: list of card values forming pairs.
-#     """
-#     counts_values = count_card_values(values)
-#     return [card for card, count in counts_values.items() if count == 2]
-
-
-def find_three_of_a_kind(values: list[str]) -> str | None:
-    """Find the card value that appears three times (three of a kind).
+def find_three_of_a_kind(values: list[str]) -> bool:
+    """Check if the hand contains three cards of the same value.
 
     Args:
-        counts (Counter): Counter of card values.
+        values (list[str]): List of card values.
 
     Returns:
-        str | None: The card value that forms three of a kind, or None if not found.
+        bool: True if three of a kind is present, False otherwise.
     """
-    counts_values = count_card_values(values)
-    return any(card for card, count in counts_values.items() if count == 3)
+    return _find_number_of_kind(values, 3)
 
 
-def find_four_of_a_kind(values: list[str]) -> str | None:
-    """Find the card value that appears four times (four of a kind).
+def find_four_of_a_kind(values: list[str]) -> bool:
+    """Check if the hand contains four cards of the same value.
 
     Args:
-        counts (Counter): Counter of card values.
+        values (list[str]): List of card values.
 
     Returns:
-        str | None: The card value that forms four of a kind, or None if not found.
+        bool: True if four of a kind is present, False otherwise.
     """
-    counts_values = count_card_values(values)
-    return any(card for card, count in counts_values.items() if count == 4)
+    return _find_number_of_kind(values, 4)
 
 
 def has_full_house(values: list[str]) -> bool:
-    """Check if the hand is a full house (three of a kind + one pair).
+    """Check if the hand is a full house.
+
+    A full house consists of three cards of one value and two cards of another value.
 
     Args:
-        counts (Counter): Counter of card values.
+        values (list[str]): List of card values.
 
     Returns:
         bool: True if the hand is a full house, False otherwise.
     """
-    counts_values = count_card_values(values)
-    has_three = any(count == 3 for count in counts_values.values())
-    has_pair = any(count == 2 for count in counts_values.values())
+    has_three = _find_number_of_kind(values, 3)
+    has_pair = _find_number_of_kind(values, 2)
     return has_three and has_pair
 
+
 def high_card(values: list[str]) -> str:
-    order = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
-    highest = max(values, key=lambda c:order.index(c))
-    return highest
+    """Return the highest card value from the hand.
+
+    Args:
+        values (list[str]): List of card values.
+
+    Returns:
+        str: The highest card value according to VALUE_MAP.
+    """
+    return max(values, key=lambda v: VALUE_MAP[v])
+
+
