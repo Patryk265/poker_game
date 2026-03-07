@@ -149,20 +149,17 @@ def change_cards(cards: list[tuple[str, str]],
 
 
 def evaluate_result(game_result):
-    """Determine which player has the best hand.
+    """Determine the winner(s) of the game using llexiconographic tuple comparison."""
 
-    Args:
-        game_result (list[dict]): List containing player names,
-        hands and evaluation results.
+    # Find best hand
+    best_hand = max(player['result'] for player in game_result)
 
-    Returns:
-        None
-    """
-    best_rank = max(player['result'][0] for player in game_result)
-    finalists = [p for p in game_result if p['result'][0] == best_rank]
+    # All players havig identical hand
+    winners = [player for player in game_result if player['result'] == best_hand]
 
-    print(best_rank)
-    print(finalists)
+    print("Winner(s):")
+    for w in winners:
+        print(f"{w['player_name']} with {w['hand']} -> {w['result']}")
 
 
 def main() -> None:
@@ -171,8 +168,9 @@ def main() -> None:
     Generates the deck, deals cards, allows card replacement,
     evaluates each player's hand and prints the result.
     """
+    amount_of_users = int(input("How many players will play? "))
     deck = generate_deck()
-    users_cards = deal_cards(deck, amount_of_users=3)
+    users_cards = deal_cards(deck, amount_of_users=amount_of_users)
 
     print(users_cards)
     game_result = []
