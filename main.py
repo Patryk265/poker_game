@@ -195,7 +195,6 @@ def main() -> None:
     print(game_result)
 
     evaluate_result(game_result)
-
 #TODO
 # OGARNĄĆ TESTY W RUFF
 # DOKOŃCZYĆ LOGIKĘ EVALUATE_HAND DLA WIELU GRACZY MOŻE BYĆ Z CHATEM
