@@ -1,3 +1,5 @@
+"""logic of poker hand."""
+
 from collections import Counter
 
 

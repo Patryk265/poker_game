@@ -1,8 +1,17 @@
-"""poker game."""
+"""Poker game."""
+
 import random
-from poker.hand_logic import is_royal_flush, is_straight, check_flush, find_three_of_a_kind, find_four_of_a_kind, has_full_house, high_card
-import poker.tie_break as tb
 from collections import Counter
+
+from poker.hand_logic import (
+    is_royal_flush,
+    is_straight,
+    check_flush,
+    find_three_of_a_kind,
+    find_four_of_a_kind,
+    has_full_house,
+    high_card,
+)
 
 
 def generate_deck() -> list[tuple[str, str]]:
@@ -14,23 +23,29 @@ def generate_deck() -> list[tuple[str, str]]:
     """
     colors = ["Hearts", "Diamonds", "Clubs", "Spades"]
     values = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"]
+
     return [(color, value) for color in colors for value in values]
 
 
-def deal_cards(deck: list[tuple[str, str]], n: int = 5, amount_of_users: int = 2) -> list[tuple[str, str]]:
+def deal_cards(
+    deck: list[tuple[str, str]],
+    n: int = 5,
+    amount_of_users: int = 2,
+) -> dict[str, list[tuple[str, str]]]:
     """Draw cards for each player from the deck without repetition.
 
     Args:
-        deck (list[tuple[str, str]]): The deck to draw cards from.
-        n (int, optional): Number of cards per player. Defaults to 5.
-        amount_of_users (int, optional): Number of players. Defaults to 2.
+        deck: The deck to draw cards from.
+        n: Number of cards per player.
+        amount_of_users: Number of players.
 
     Returns:
-        dict: Dictionary where keys are player names and values are lists of cards.
+        dict[str, list[tuple[str, str]]]: Mapping of player name to cards.
     """
     random.shuffle(deck)
 
-    users_cards = {}
+    users_cards: dict[str, list[tuple[str, str]]] = {}
+
     for i in range(amount_of_users):
         player_cards = deck[:n]
         del deck[:n]
@@ -39,48 +54,49 @@ def deal_cards(deck: list[tuple[str, str]], n: int = 5, amount_of_users: int = 2
     return users_cards
 
 
-def extract_colors_and_values(cards: list[tuple[str, str]]) -> tuple[list[str], list[str]]:
-    """Separate suits and values from a list of cards.
+def extract_colors_and_values(
+    cards: list[tuple[str, str]],
+) -> tuple[list[str], list[str]]:
+    """Separate suits and values from cards.
 
     Args:
-        cards (list[tuple[str, str]]): list of cards as (suit, value) tuples.
+        cards: Cards represented as (suit, value).
 
     Returns:
-        tuple[list[str], list[str]]: Two lists, first with suits and second with values.
+        tuple[list[str], list[str]]: Suits and values.
     """
     colors = [color for color, _ in cards]
     values = [value for _, value in cards]
+
     return colors, values
 
 
-def count_card_amount(n: int, card_values: dict) -> int:
+def count_card_amount(n: int, card_values: dict[str, int]) -> str:
     """Return the card value that appears exactly n times.
 
     Args:
-        n (int): Number of occurrences to look for (e.g. 2 for pair).
-        card_values (dict): Dictionary mapping card values to counts.
+        n: Number of occurrences to search for.
+        card_values: Mapping of card value to occurrences.
 
     Returns:
-        int: Card value that appears n times.
+        str: Card value that appears n times.
     """
-    return [k for k, v in card_values.items() if card_values[k] == n][0]
+    return [k for k, v in card_values.items() if v == n][0]
 
 
-def evaluate_hand(user_cards):
-    """Evaluate the poker hand for a given set of cards.
-
-    Determines the rank of the hand according to poker rules.
+def evaluate_hand(user_cards: list[tuple[str, str]]) -> tuple | int:
+    """Evaluate the poker hand.
 
     Args:
-        user_cards (list[tuple[str, str]]): Player's cards.
+        user_cards: Cards belonging to a player.
 
     Returns:
-        tuple | int: Hand ranking representation used later for comparison.
+        tuple | int: Hand ranking used for comparison.
     """
     colors, values = extract_colors_and_values(user_cards)
 
     card_values = Counter(values)
-    value = list(card_values.values())
+    counts = list(card_values.values())
     keys = list(card_values.keys())
 
     print("\n--- ANALYSIS ---")
@@ -88,54 +104,55 @@ def evaluate_hand(user_cards):
     if is_royal_flush(colors, values):
         return 10
 
-    elif is_straight(values) and check_flush(colors):
-        return (9, high_card(keys))
+    if is_straight(values) and check_flush(colors):
+        return (9, high_card(values))
 
-    elif find_four_of_a_kind(values):
+    if find_four_of_a_kind(values):
         card_value = count_card_amount(4, card_values)
-        max_card = high_card(keys[1:])
+        max_card = high_card(values)
         return (8, card_value, max_card)
 
-    elif has_full_house(values):
+    if has_full_house(values):
         three = count_card_amount(3, card_values)
         pair = count_card_amount(2, card_values)
         return (7, three, pair)
 
-    elif check_flush(colors):
-        return (6, high_card(keys))
+    if check_flush(colors):
+        return (6, high_card(values))
 
-    elif is_straight(values):
-        return (5, high_card(keys))
+    if is_straight(values):
+        return (5, high_card(values))
 
-    elif find_three_of_a_kind(values):
+    if find_three_of_a_kind(values):
         card_value = count_card_amount(3, card_values)
-        max_card = high_card(keys[1:])
+        max_card = high_card(values)
         return (4, card_value, max_card)
 
-    elif len(value) == 3:
+    if len(counts) == 3:
         return (3, keys[0], keys[1], keys[2])
 
-    elif len(value) == 4:
+    if len(counts) == 4:
         card_value = count_card_amount(2, card_values)
-        max_card = high_card(keys[1:])
+        max_card = high_card(values)
         return (2, card_value, max_card)
 
-    elif high_card(values):
-        return (1, high_card(values))
+    return (1, high_card(values))
 
 
-def change_cards(cards: list[tuple[str, str]],
-                 deck: list[tuple[str, str]],
-                 indices: list[int] | None = None) -> None:
-    """Replace selected cards in a player's hand with cards from the deck.
+def change_cards(
+    cards: list[tuple[str, str]],
+    deck: list[tuple[str, str]],
+    indices: list[int] | None = None,
+) -> None:
+    """Replace selected cards in player's hand.
 
     Args:
-        cards (list[tuple[str, str]]): Player's current cards.
-        deck (list[tuple[str, str]]): Remaining deck.
-        indices (list[int] | None): Positions of cards to replace.
+        cards: Player cards.
+        deck: Remaining deck.
+        indices: Positions of cards to replace.
 
     Raises:
-        IndexError: If provided card index is invalid.
+        IndexError: If invalid card index is provided.
     """
     if not indices:
         return
@@ -148,53 +165,68 @@ def change_cards(cards: list[tuple[str, str]],
         cards[idx] = new_card
 
 
-def evaluate_result(game_result):
-    """Determine the winner(s) of the game using llexiconographic tuple comparison."""
+def evaluate_result(game_result: list[dict]) -> None:
+    """Determine winner(s) of the game using lexicographic comparison."""
+    best_hand = max(player["result"] for player in game_result)
 
-    # Find best hand
-    best_hand = max(player['result'] for player in game_result)
-
-    # All players havig identical hand
-    winners = [player for player in game_result if player['result'] == best_hand]
+    winners = [
+        player for player in game_result
+        if player["result"] == best_hand
+    ]
 
     print("Winner(s):")
-    for w in winners:
-        print(f"{w['player_name']} with {w['hand']} -> {w['result']}")
+
+    for winner in winners:
+        print(
+            f"{winner['player_name']} "
+            f"with {winner['hand']} -> {winner['result']}"
+        )
 
 
 def main() -> None:
-    """Run the poker game.
-
-    Generates the deck, deals cards, allows card replacement,
-    evaluates each player's hand and prints the result.
-    """
+    """Run the poker game."""
     amount_of_users = int(input("How many players will play? "))
+
     deck = generate_deck()
     users_cards = deal_cards(deck, amount_of_users=amount_of_users)
 
     print(users_cards)
-    game_result = []
+
+    game_result: list[dict] = []
 
     for player, cards in users_cards.items():
         print(f"{player} before change: {cards}")
+
         indices_to_change = input(
-            "pass in card indexes form 0-4 to replace card or press enter to ommit: "
+            "Pass card indexes 0-4 to replace or press enter to skip: "
         ).strip()
 
-        indices = list(map(int, indices_to_change.split())) if indices_to_change else None
+        indices = (
+            list(map(int, indices_to_change.split()))
+            if indices_to_change
+            else None
+        )
+
         change_cards(cards, deck, indices)
+
         print(f"{player} after change: {cards}")
 
         result = evaluate_hand(cards)
-        player_dict = {'player_name': player, 'hand': cards, 'result': result}
+
+        player_dict = {
+            "player_name": player,
+            "hand": cards,
+            "result": result,
+        }
+
         game_result.append(player_dict)
+
         print(f"{player} has {cards} with {result}")
 
     print(game_result)
 
     evaluate_result(game_result)
-#TODO
-# OGARNĄĆ TESTY W RUFF
-# DOKOŃCZYĆ LOGIKĘ EVALUATE_HAND DLA WIELU GRACZY MOŻE BYĆ Z CHATEM
+
+
 if __name__ == "__main__":
     main()
